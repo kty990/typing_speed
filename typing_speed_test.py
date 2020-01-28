@@ -9,6 +9,7 @@ total = 0
 words_in_sentence = 0
 sentence_words = []
 words = []
+sentence = ""
 def set_original_time():
     global now, HOUR, MINUTE, SECOND
     now = datetime.now()
@@ -34,7 +35,8 @@ def get_time():
     
     return str(hours_gone + ":" + min_gone + ":" + secs_gone)
 
-possible_words_lowercase = ["banana", "apple", "toyota", "canada", "monkey", "archbishop", "bishop", "and", "is", "or", "computer", "programming"] #add more words for more difficult tests
+possible_words_lowercase = ["banana", "apple", "toyota", "canada", "monkey", "archbishop", "bishop", "and", "is", "or", "computer", "programming",
+                            "asian","white","black","brown", "add", "more","word","words","sword","jewish","bored","eating","eats","english", "sucks"] #add more words for more difficult tests
 
 def get_hour(string): #returns whole hours since the user started the test. This, by default will not return minutes or seconds, as they will not return whole hours.
     l = string
@@ -70,17 +72,57 @@ def get_sec(string): #returns seconds since the user started the test, does not 
             shown += 1
     return sec
 
+def evaluate_input(string):
+    global correct,total,words_in_sentence,sentence_words,words,sentence
+    """ Check to see if it matches 100% """
+    if string == sentence:
+        correct = words_in_sentence
+        for i in range(len(sentence_words)):
+            current = sentence_words[i]
+            for y in range(len(current)):
+                total += 1
+        return
+    else:
+        current = ""
+        for i in range(len(string)):
+            if string[i] == " ":
+                words.insert(len(words),current)
+                current = ""
+                total += 1
+            else:
+                current = current + string[i]
+                total += 1
+                if i == len(string) - 1:
+                    words.insert(len(words), current)
+                    current = ""
+        """ Evaluate the words which have been deciphered, ignoring whitespaces """
+        for i in range(len(words)):
+            if words[i] == sentence_words[i]:
+                correct += 1
+            else:
+                # See if any part of the word, starting at beginning is the same, stopping when it is not.
+                part = 0
+                for x in range(len(words[i])):
+                    c = words[i]
+                    d = sentence_words[i]
+                    if c[x] == d[x]:
+                        part = x/len(words[i])
+                    else:
+                        break
+                if part > 0:
+                    correct += (part / len(c))
+        print(correct)
+
 def present_sentence(type_):
-    global possible_words_lowercase, possible_words, correct, total, words_in_sentence, sentence_words, words
+    global possible_words_lowercase, possible_words, correct, total, words_in_sentence, sentence_words, words, sentence
     location = 0 #default
     if type_ == 1: #lowercase
         words_in_sentence = 10
-        sentence = ""
         for y in range(10):
             location = random.randint(0,len(possible_words_lowercase)-1) # location in the list of lowercase words
             if y != 9: 
                 sentence = sentence + possible_words_lowercase[location] + " " #add the word from location above to the sentence, include a space.
-                sentence_words.insert(len(sentence_words),possible_words_lowercase[location] + " ")
+                sentence_words.insert(len(sentence_words),possible_words_lowercase[location])
             else:
                 sentence = sentence + possible_words_lowercase[location]
                 sentence_words.insert(len(sentence_words),possible_words_lowercase[location])
@@ -88,52 +130,12 @@ def present_sentence(type_):
         user_input = input(">> ") #ask user to type in the outputted sentence above
         print(f"{len(user_input)} : input length -- {len(sentence)} : sentence length")
         current_word = ""
-        for i in range(0, len(user_input)):
-            """
-            Goes through the user's input to determine how accurate they were when typing the sentence, or string of words provided.
-            """
-            print(f"{i} : i -- {len(user_input)} : input")
-            current_word = current_word + user_input[i]
-            if (i == len(user_input) - 1): #redo section
-                print(f"LIMIT")
-                c_w = ""
-                total = len(current_word)
-                for i in range(len(current_word)):
-                    print(i)
-                    if current_word[i] != " " and i != len(current_word) - 1:
-                        c_w = c_w + current_word[i]
-                    else:
-                        words.insert(len(words), c_w)
-                        words.insert(len(words), " ")
-                        print(f"Inserted {c_w} into words list!")
-                        c_w = ""
-                starting_index = 0
-                for i in range(len(words)):
-                    ending_index = len(words[i]) + starting_index
-                    if words[i] == sentence[starting_index:ending_index] and len(words[i]) == len(sentence_words[i]):
-                        correct += 1
-                    elif words[i] == sentence[starting_index:ending_index]:
-                        correct += (1/(len(sentence_words[i]) - len(words[i])))
-                    starting_index = ending_index + 1
-            elif user_input[i+1] == " ":
-                print(f"SPACE")
-                total += len(current_word)
-                length = len(current_word)
-                start = i - length
-                end = i+1
-                words.insert(len(words), current_word)
-                if sentence[start:end] == current_word:
-                    correct +=1
-                    print(f"Is correct: {sentence[start:end]}")
-                else:
-                    print(f"{current_word} at location {start} - {end-1} is not found at that location in the sentence")
-                current_word = ""
-            elif user_input[i] == sentence[i] and user_input[i] != " ":
-                print(f"NON SPACE {user_input[i]}")
-        correct == correct//words_in_sentence
+        """  NEED TO GET HOW ACCURATE THE USER IS  """
+        evaluate_input(user_input)
         time_ = get_time()
         print(f"You completed this test in {time_} (H/M/S)")
-        print(f"You were {(correct/words_in_sentence) * 100}% accurate!")
+        print(f"You were {(correct/words_in_sentence)*100}% accurate!")
+        print(f"Words entered: {words}")
         H = int(get_hour(time_))
         M = int(get_min(time_))
         S = int(get_sec(time_))
