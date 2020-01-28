@@ -154,4 +154,5 @@ def start_test(type_): #is redundant
         set_original_time()
         present_sentence(3)
 
+""" Only type 1 works, which is why it is hard-coded. """
 start_test(1)
